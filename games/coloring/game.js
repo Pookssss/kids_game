@@ -69,6 +69,7 @@ const Game = {
   init() {
     this.canvas = document.getElementById('coloring-canvas');
     this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
+    this.bgImg = document.getElementById('coloring-bg-img');
     this.bindUI();
     this.loadAnimal('panda');
   },
@@ -172,19 +173,20 @@ const Game = {
     this.canvas.width  = W;
     this.canvas.height = H;
 
-    // 1) Draw full-color image on canvas bottom layer
-    this.ctx.drawImage(this.imageObj, 0, 0, W, H);
+    // 1) Show the full-color image as CSS background (behind canvas)
+    this.bgImg.src = this.imageObj.src;
+    this.bgImg.style.display = 'block';
 
-    // 2) Draw gray overlay on top (destination-atop will be used on erase)
-    this.ctx.save();
-    // We overlay with a gradient fog
+    // 2) Draw ONLY the fog overlay on the canvas (image NOT drawn here)
+    //    destination-out will erase fog pixels, revealing bgImg beneath
+    this.ctx.clearRect(0, 0, W, H);
     const grad = this.ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.7);
     grad.addColorStop(0, 'rgba(200,210,230,0.97)');
     grad.addColorStop(1, 'rgba(180,190,215,0.99)');
     this.ctx.fillStyle = grad;
     this.ctx.fillRect(0, 0, W, H);
 
-    // Add sparkle pattern
+    // Add sparkle dots
     for (let i = 0; i < 30; i++) {
       const x = Math.random() * W;
       const y = Math.random() * H;
@@ -195,20 +197,15 @@ const Game = {
       this.ctx.fill();
     }
 
-    // Add "?" question mark watermark
+    // "?" watermark
     this.ctx.font = `bold ${Math.floor(H * 0.4)}px 'Fredoka', sans-serif`;
     this.ctx.textAlign = 'center';
     this.ctx.textBaseline = 'middle';
     this.ctx.fillStyle = 'rgba(255,255,255,0.25)';
     this.ctx.fillText('?', W / 2, H / 2);
 
-    this.ctx.restore();
-
-    // Store the overlay as ImageData so we can erase from it
     this.totalPixels = W * H;
     this.revealed = 0;
-
-    // Start periodic reveal check
     this.checkInterval = setInterval(() => this.checkReveal(), 1000);
   },
 
@@ -304,14 +301,8 @@ const Game = {
   },
 
   showVictory() {
-    // Draw full image to reveal everything
-    this.ctx.save();
-    this.ctx.globalCompositeOperation = 'destination-over';
-    this.ctx.drawImage(this.imageObj, 0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.restore();
-    // Also clear the fog layer
+    // Clear the fog canvas entirely — bgImg already shows the full image
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.drawImage(this.imageObj, 0, 0, this.canvas.width, this.canvas.height);
 
     this.updateProgress(1);
     Audio$.win();

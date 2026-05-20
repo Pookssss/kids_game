@@ -259,18 +259,33 @@ h1 {
   align-items: center;
   border-radius: var(--radius-lg);
   overflow: hidden;
-  background: #f8f9fa;
+  background: #fff;
   cursor: crosshair;
   min-height: 300px;
 }
 
+/* Background image layer — sits behind the canvas */
+.coloring-bg-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
+  display: block;
+  z-index: 0;
+}
+
 #coloring-canvas {
   display: block;
+  position: relative;
+  z-index: 1;             /* canvas sits on TOP of bg img */
   width: 100%;
   height: auto;
   max-height: 60vh;
   border-radius: var(--radius-lg);
   touch-action: none;
+  background: transparent; /* must be transparent so bg img shows through */
 }
 
 /* Loading overlay */
