@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>เกมต่อจิ๊กซอว์สัตว์แสนสนุก | Cute Animal Jigsaw Puzzle</title>
+  <meta name="description" content="เกมต่อจิ๊กซอว์ภาพสัตว์น่ารักสำหรับเด็กเล็กอายุ 2-5 ขวบ">
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Quicksand:wght@300..700&family=Noto+Sans+Thai:wght@300..700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header Area -->
+    <header class="app-header">
+      <div class="header-content">
+        <div class="logo-area">
+          <a href="../../index.html" class="back-btn" title="กลับหน้าหลัก" id="btn-back-home">🏠</a>
+          <span class="logo-icon">🧩</span>
+          <h1>จิ๊กซอว์สัตว์แสนสนุก</h1>
+        </div>
+        <div class="header-actions" style="display: flex; gap: 10px;">
+          <button class="parent-settings-trigger" id="btn-main-shuffle" title="สุ่มสลับชิ้นส่วนใหม่">
+            <span class="gear-icon">🔀</span>
+            <span class="gear-text">สลับชิ้นส่วน</span>
+          </button>
+          <button class="parent-settings-trigger" id="btn-parent-settings">
+            <span class="gear-icon">⚙️</span>
+            <span class="gear-text">สำหรับผู้ปกครอง</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Game Section -->
+    <main class="game-main-clean">
+      <section class="workspace-area-clean">
+        <div class="board-container-clean card" id="board-container">
+          <div class="canvas-wrapper">
+            <canvas id="game-canvas"></canvas>
+            <div class="loading-overlay" id="loading-overlay">
+              <div class="spinner"></div>
+              <span>กำลังเตรียมจิ๊กซอว์...</span>
+            </div>
+          </div>
+        </div>
+        <div class="kid-controls">
+          <button class="kid-action-btn" id="btn-kid-hint">
+            <span class="btn-emoji">👁️</span>
+            <span class="btn-text">เปิดรูปตัวอย่างลางๆ</span>
+          </button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Parent Gate Modal -->
+  <div class="modal-overlay" id="parent-gate-modal">
+    <div class="modal-content parent-gate-card">
+      <button class="modal-close" id="btn-close-gate">×</button>
+      <h2>🔒 พื้นที่สำหรับผู้ปกครอง</h2>
+      <p class="gate-instruction">กรุณาตอบคำถามด้านล่างเพื่อเข้าสู่การตั้งค่า</p>
+      <div class="math-question-container">
+        <span class="math-question" id="math-question">5 + 3 = ?</span>
+      </div>
+      <div class="math-input-wrapper">
+        <input type="number" pattern="[0-9]*" inputmode="numeric" id="gate-answer" placeholder="คำตอบ" autocomplete="off">
+      </div>
+      <div class="gate-error" id="gate-error-msg">คำตอบยังไม่ถูกต้อง ลองใหม่อีกครั้งนะคะ</div>
+      <div class="modal-buttons">
+        <button class="modal-btn primary" id="btn-submit-gate">เข้าสู่การตั้งค่า</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parent Settings Modal -->
+  <div class="modal-overlay" id="parent-settings-modal">
+    <div class="modal-content parent-settings-card">
+      <button class="modal-close" id="btn-close-settings">×</button>
+      <h2>⚙️ การตั้งค่าสำหรับผู้ปกครอง</h2>
+      <div class="settings-layout">
+        <div class="settings-section">
+          <h3>เลือกรูปภาพสัตว์ (8 ชนิด)</h3>
+          <div class="animal-grid-scroll">
+            <div class="animal-grid" id="parent-animal-grid">
+              <button class="animal-card active" data-animal="panda"><div class="animal-img-wrapper"><img src="../../assets/cute_panda.png" alt="แพนด้า"></div><span>แพนด้า</span></button>
+              <button class="animal-card" data-animal="lion"><div class="animal-img-wrapper"><img src="../../assets/cute_lion.png" alt="สิงโต"></div><span>สิงโต</span></button>
+              <button class="animal-card" data-animal="elephant"><div class="animal-img-wrapper"><img src="../../assets/cute_elephant.png" alt="ช้างน้อย"></div><span>ช้างน้อย</span></button>
+              <button class="animal-card" data-animal="fox"><div class="animal-img-wrapper"><img src="../../assets/cute_fox.png" alt="สุนัขจิ้งจอก"></div><span>จิ้งจอก</span></button>
+              <button class="animal-card" data-animal="cat"><div class="animal-img-wrapper"><img src="../../assets/cute_cat.png" alt="แมวเหมียว"></div><span>แมวเหมียว</span></button>
+              <button class="animal-card" data-animal="koala"><div class="animal-img-wrapper"><img src="../../assets/cute_koala.png" alt="โคอาล่า"></div><span>โคอาล่า</span></button>
+              <button class="animal-card" data-animal="rabbit"><div class="animal-img-wrapper"><img src="../../assets/cute_rabbit.png" alt="กระต่าย"></div><span>กระต่าย</span></button>
+              <button class="animal-card" data-animal="monkey"><div class="animal-img-wrapper"><img src="../../assets/cute_monkey.png" alt="ลิงซน"></div><span>ลิงซน</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="settings-section">
+          <h3>ระดับความยาก</h3>
+          <div class="difficulty-selector-settings">
+            <button class="diff-btn-settings" data-grid="2" id="diff-2"><span class="diff-level">เด็กเล็กพิเศษ (2 × 2)</span><span class="diff-pieces">4 ชิ้น</span></button>
+            <button class="diff-btn-settings active" data-grid="3" id="diff-3"><span class="diff-level">ง่าย (3 × 3)</span><span class="diff-pieces">9 ชิ้น</span></button>
+            <button class="diff-btn-settings" data-grid="6" id="diff-6"><span class="diff-level">ปานกลาง (6 × 6)</span><span class="diff-pieces">36 ชิ้น</span></button>
+            <button class="diff-btn-settings" data-grid="9" id="diff-9"><span class="diff-level">ท้าทาย (9 × 9)</span><span class="diff-pieces">81 ชิ้น</span></button>
+          </div>
+          <h3 style="margin-top: 20px;">ตัวเลือกเพิ่มเติม</h3>
+          <div class="options-grid-settings">
+            <button class="setting-option-btn" id="parent-btn-hint"><span class="opt-icon">👁️</span><span class="opt-text">ตัวช่วยภาพลาง</span></button>
+            <button class="setting-option-btn" id="parent-btn-border"><span class="opt-icon">🖼️</span><span class="opt-text">เฉพาะชิ้นขอบ</span></button>
+            <button class="setting-option-btn active" id="parent-btn-sound"><span class="opt-icon" id="parent-sound-icon">🔊</span><span class="opt-text">เปิดเสียง</span></button>
+            <button class="setting-option-btn reset-btn" id="parent-btn-shuffle"><span class="opt-icon">🔄</span><span class="opt-text">สลับชิ้นส่วน</span></button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-buttons" style="margin-top: 25px;">
+        <button class="modal-btn primary" id="btn-save-settings">ตกลง &amp; เริ่มเกม 🎮</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Victory Modal -->
+  <div class="modal-overlay" id="victory-modal">
+    <div class="modal-content victory-card-clean">
+      <div class="victory-ribbon">🎉 เก่งที่สุดเลย! 🎉</div>
+      <div class="victory-emoji">⭐️🦁⭐️</div>
+      <h2>เย้! ต่อจิ๊กซอว์สำเร็จแล้ว!</h2>
+      <p class="victory-subtext">คนเก่งเก่งมากๆ เลยครับ/ค่ะ!</p>
+      <div class="victory-stats-hidden" style="display:none;">
+        <span id="victory-time">00:00</span>
+        <span id="victory-moves">0</span>
+        <span id="victory-diff">ง่าย (3x3)</span>
+      </div>
+      <div class="modal-buttons">
+        <button class="modal-btn primary" id="btn-play-again" style="font-size: 1.3rem; padding: 18px 40px; border-radius: 20px;">เล่นอีกรอบ 🔄</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="game.js"></script>
+</body>
+</html>

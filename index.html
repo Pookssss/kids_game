@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kids Game Zone | เกมสนุกสำหรับเด็ก</title>
+  <meta name="description" content="คลังเกมสนุกสำหรับเด็กเล็ก อายุ 2-5 ปี - จิ๊กซอว์, ระบายสี, จับคู่ภาพ">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Noto+Sans+Thai:wght@300..700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Floating bubbles background -->
+  <div class="bubbles-bg" aria-hidden="true">
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    <div class="bubble"></div><div class="bubble"></div><div class="bubble"></div>
+    <div class="bubble"></div>
+  </div>
+
+  <div class="portal-container">
+    <!-- Header -->
+    <header class="portal-header">
+      <div class="portal-logo">
+        <span class="portal-logo-icon">🌟</span>
+        <div>
+          <h1>Kids Game Zone</h1>
+          <p class="portal-tagline">เกมสนุกสำหรับเด็กน้อย 🎈</p>
+        </div>
+      </div>
+      <div class="portal-stars">⭐️ ⭐️ ⭐️</div>
+    </header>
+
+    <!-- Game Cards Grid -->
+    <main class="games-grid" id="games-grid">
+
+      <!-- Jigsaw Puzzle -->
+      <a href="games/jigsaw/index.html" class="game-card" id="card-jigsaw" tabindex="0" aria-label="เกมต่อจิ๊กซอว์สัตว์แสนสนุก">
+        <div class="card-badge">⭐ ยอดนิยม</div>
+        <div class="card-icon-wrap jigsaw-bg">
+          <span class="card-big-icon">🧩</span>
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">จิ๊กซอว์สัตว์</h2>
+          <p class="card-desc">ต่อชิ้นส่วนให้ครบ แล้วเห็นภาพสัตว์น่ารัก!</p>
+          <div class="card-tags">
+            <span class="tag">🔢 4–81 ชิ้น</span>
+            <span class="tag">👶 อายุ 2+</span>
+          </div>
+        </div>
+        <div class="card-play-btn">เล่นเลย! 🎮</div>
+      </a>
+
+      <!-- Memory Match -->
+      <a href="games/memory/index.html" class="game-card" id="card-memory" tabindex="0" aria-label="เกมจับคู่ภาพสัตว์">
+        <div class="card-icon-wrap memory-bg">
+          <span class="card-big-icon">🃏</span>
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">จับคู่ภาพสัตว์</h2>
+          <p class="card-desc">พลิกไพ่แล้วหาคู่ที่เหมือนกัน ฝึกความจำ!</p>
+          <div class="card-tags">
+            <span class="tag">🧠 ฝึกความจำ</span>
+            <span class="tag">👶 อายุ 3+</span>
+          </div>
+        </div>
+        <div class="card-play-btn">เล่นเลย! 🎮</div>
+      </a>
+
+      <!-- Magic Coloring -->
+      <a href="games/coloring/index.html" class="game-card" id="card-coloring" tabindex="0" aria-label="เกมระบายสีเวทมนตร์">
+        <div class="card-icon-wrap coloring-bg">
+          <span class="card-big-icon">🎨</span>
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">ระบายสีเวทมนตร์</h2>
+          <p class="card-desc">ลากนิ้วแล้วภาพสัตว์จะค่อยๆ ปรากฏขึ้นมา!</p>
+          <div class="card-tags">
+            <span class="tag">✨ เวทมนตร์</span>
+            <span class="tag">👶 อายุ 2+</span>
+          </div>
+        </div>
+        <div class="card-play-btn">เล่นเลย! 🎮</div>
+      </a>
+
+      <!-- ABC Animals English -->
+      <a href="games/english/index.html" class="game-card" id="card-english" tabindex="0" aria-label="เกมเรียนภาษาอังกฤษ ABC">
+        <div class="card-badge new-badge">🆕 ใหม่!</div>
+        <div class="card-icon-wrap english-bg">
+          <span class="card-big-icon">🔤</span>
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">ABC Animals</h2>
+          <p class="card-desc">เรียนรู้ตัวอักษร A-Z พร้อมเสียงออกเสียงจริง!</p>
+          <div class="card-tags">
+            <span class="tag">🔊 ฟังเสียง</span>
+            <span class="tag">👶 อายุ 2+</span>
+          </div>
+        </div>
+        <div class="card-play-btn">เล่นเลย! 🎮</div>
+      </a>
+
+      <!-- Animal Word‑Match -->
+      <a href="games/word-match/index.html" class="game-card" id="card-wordmatch" tabindex="0" aria-label="เกมจับคู่สัตว์ภาษาอังกฤษ">
+        <div class="card-badge new-badge">🆕 ใหม่!</div>
+        <div class="card-icon-wrap wordmatch-bg">
+          <span class="card-big-icon">🧩</span>
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">จับคู่สัตว์</h2>
+          <p class="card-desc">จับคู่รูปสัตว์กับชื่ออังกฤษ!</p>
+          <div class="card-tags">
+            <span class="tag">🔤 ภาษาอังกฤษ</span>
+            <span class="tag">👶 อายุ 2+</span>
+          </div>
+        </div>
+        <div class="card-play-btn">เล่นเลย! 🎮</div>
+      </a>
+
+      <!-- Animal Piano -->
+      <a href="games/piano/index.html" class="game-card" id="card-piano" tabindex="0" aria-label="เกมเปียโนเสียงสัตว์แสนสนุก">
+        <div class="card-badge new-badge">🆕 ใหม่!</div>
+        <div class="card-icon-wrap piano-bg">
+          <span class="card-big-icon">🎹</span>
+        </div>
+        <div class="card-info">
+          <h2 class="card-title">เปียโนเสียงสัตว์</h2>
+          <p class="card-desc">เล่นโน้ตเพลงและสนุกกับเสียงสัตว์น่ารัก!</p>
+          <div class="card-tags">
+            <span class="tag">🎵 เสียงดนตรี</span>
+            <span class="tag">👶 อายุ 2+</span>
+          </div>
+        </div>
+        <div class="card-play-btn">เล่นเลย! 🎮</div>
+      </a>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="portal-footer">
+      <p>🌈 ออกแบบมาเพื่อเด็กน้อยอายุ 2–5 ปี • เล่นได้บน iPad, Tablet และ PC</p>
+    </footer>
+  </div>
+
+  <script>
+    // Subtle sound on card hover
+    const AudioSynth = {
+      ctx: null,
+      init() {
+        if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (this.ctx.state === 'suspended') this.ctx.resume();
+      },
+      playPop() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(660, this.ctx.currentTime + 0.1);
+          gain.gain.setValueAtTime(0.1, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.15);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(); osc.stop(this.ctx.currentTime + 0.15);
+        } catch(e) {}
+      },
+      playClick() {
+        try {
+          this.init();
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(784, this.ctx.currentTime + 0.06);
+          gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.12);
+          osc.connect(gain); gain.connect(this.ctx.destination);
+          osc.start(); osc.stop(this.ctx.currentTime + 0.12);
+        } catch(e) {}
+      }
+    };
+
+    document.querySelectorAll('.game-card').forEach(card => {
+      card.addEventListener('mouseenter', () => AudioSynth.playPop());
+      card.addEventListener('click', (e) => {
+        AudioSynth.playClick();
+      });
+      // Keyboard accessibility
+      card.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          AudioSynth.playClick();
+          window.location.href = card.href;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
