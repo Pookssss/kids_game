@@ -1,134 +1,78 @@
-# 🎮 Kids Game Zone
+# Kids Game Zone (Next.js)
 
-**เว็บแอปคลังเกมสำหรับเด็กเล็กอายุ 2-5 ปี** — เรียนรู้ เพลิดเพลิน และพัฒนาการผ่านเกม 6 เกมสนุกสนาน ไม่ต้องติดตั้ง เล่นได้ทันทีผ่านเบราว์เซอร์
+Kids Game Zone คือคลังเกมสำหรับเด็กเล็กอายุ 2-5 ปี ที่ย้ายจาก Static HTML/CSS/JS มาเป็น Next.js (App Router) โดยยังคงพฤติกรรมเกมเดิมไว้ด้วยแนวทาง Hybrid (React UI + game logic เดิมที่พอร์ตเป็น TypeScript)
 
----
+อัปเดตล่าสุด: 2026-05-21
 
-## 🕹️ เกมทั้งหมด
+## สถานะโปรเจกต์
 
-| # | เกม | คำอธิบาย | ทักษะที่พัฒนา |
-|---|-----|-----------|--------------|
-| 1 | 🧩 **จิ๊กซอว์สัตว์** | ต่อชิ้นส่วนภาพสัตว์ 4 ระดับ | การมองเห็น, ความอดทน |
-| 2 | 🃏 **จับคู่ภาพสัตว์** | พลิกการ์ดจับคู่ให้ครบ | ความจำ, สมาธิ |
-| 3 | 🎨 **ระบายสีเวทมนตร์** | ปัดหมอกให้รูปสัตว์ปรากฏ | ทักษะมือ, ความคาดเดา |
-| 4 | 🔤 **ABC Animals** | เรียนรู้ตัวอักษร A-Z กับสัตว์ | ภาษาอังกฤษ, การฟัง |
-| 5 | 🔗 **จับคู่คำศัพท์** | จับคู่ภาพกับคำภาษาอังกฤษ | คำศัพท์, การจดจำ |
-| 6 | 🎹 **เปียโนเสียงสัตว์** | กดเปียโนฟังเสียงร้องสัตว์จริง | ดนตรี, ความสัมพันธ์เสียง |
+- ย้าย Portal สำเร็จ (`src/app/page.tsx`)
+- ย้ายเกมครบ 6 เกมแล้ว
+- ตั้งค่า PWA สำหรับ Next.js แล้ว (`public/manifest.json`, `public/service-worker.js`)
+- Build ผ่าน (`npm run build`)
 
----
+## เกมทั้งหมด
 
-## ✨ ไฮไลท์ฟีเจอร์
+1. จิ๊กซอว์สัตว์: `/games/jigsaw`
+2. จับคู่ภาพสัตว์: `/games/memory`
+3. ระบายสีเวทมนตร์: `/games/coloring`
+4. ABC Animals: `/games/english`
+5. จับคู่สัตว์คำศัพท์: `/games/word-match`
+6. เปียโนเสียงสัตว์: `/games/piano`
 
-### 🎹 เกมเปียโนเสียงสัตว์
-- **เสียงสัตว์จริง** จากไฟล์ MP3 ที่บันทึกจริง (ไม่ใช่ Text-to-Speech)
-- **3 โหมดเสียง**: เปียโนสังเคราะห์ / เสียงสัตว์ / มิกซ์ทั้งคู่
-- **ระบบฝึกเล่นตามเพลง** พร้อม Song Guide Panel แสดงโน้ตถัดไปแบบ Visual
-  - Block สีใหญ่แสดงสีและชื่อโน้ตที่ต้องกด
-  - จุดสีเรียงลำดับโน้ตถัดไป 12 จุด
-  - ลูกศร 👇 กระพริบบนคีย์ที่ต้องกด
-- **เพิ่มจำนวนรอบ** ได้ตามต้องการ (1-10 รอบ)
-- เพลงในระบบ: Twinkle Twinkle ⭐, Mary Had a Little Lamb 🐑, Jingle Bells 🔔
+## โครงสร้างหลัก
 
----
-
-## 🛠️ เทคโนโลยี
-
-- **Pure HTML + CSS + JavaScript** — ไม่มี Framework, ไม่มี Build Step
-- **Web Audio API** — สร้างเสียงดนตรีสังเคราะห์คุณภาพดี
-- **Canvas API** — ระบบ Pixel Analyzer สำหรับเกมระบายสี
-- **CSS Animations** — Particle, Bounce, Glow, Glassmorphism
-- **Google Fonts** (Fredoka, Noto Sans Thai) — ฟอนต์น่ารักสำหรับเด็ก
-- **PWA** — Web App Manifest + Service Worker รองรับ Offline และ Install บน Home Screen
-
----
-
-## 📱 ติดตั้งแอปบน iPhone / iPad (PWA)
-
-เล่นแบบ Fullscreen ไม่มี browser bar เหมือน Native App!
-
-### iPhone / iPad (Safari)
-1. เปิด Safari แล้วไปที่ URL ของเกม (ต้อง HTTPS เช่น Vercel)
-2. กดปุ่ม **Share** (กล่องมีลูกศรขึ้น) ที่แถบล่าง
-3. เลือก **"เพิ่มในหน้าจอโฮม"** (Add to Home Screen)
-4. กด **"เพิ่ม"** — ไอคอนจะปรากฏบนหน้าจอโฮม 🎮
-5. เปิดจากไอคอน → เล่นแบบ **Fullscreen** ไม่มี Safari bar!
-
-### Android (Chrome)
-1. เปิด Chrome แล้วไปที่ URL ของเกม
-2. กดปุ่ม **⋮ เมนู** → **"เพิ่มในหน้าจอหลัก"**
-3. หรือรอ Banner "ติดตั้งแอป" ที่จะปรากฏอัตโนมัติ
-
-> 💡 **รองรับ Offline**: เมื่อติดตั้งแล้ว สามารถเล่นได้แม้ไม่มีอินเทอร์เน็ต (Service Worker จะ Cache ทุกไฟล์ไว้ในเครื่อง)
-
-## 📁 โครงสร้างไฟล์
-
-```
+```txt
 kids_game/
-├── index.html          ← หน้า Portal เลือกเกม
-├── style.css           ← CSS หน้า Portal
-├── vercel.json         ← Vercel Deploy Config
-├── assets/
-│   ├── images/         ← รูปสัตว์ (PNG)
-│   └── sounds/         ← เสียงสัตว์จริง (MP3)
-│       ├── cat.mp3, dog.mp3, elephant.mp3
-│       ├── chicken.mp3, duck.mp3, frog.mp3
-│       ├── monkey.mp3, lion.mp3
-└── games/
-    ├── jigsaw/
-    ├── memory/
-    ├── coloring/
-    ├── english/
-    ├── word-match/
-    └── piano/
+├── AGENTS.md
+├── AGENT.md
+├── public/
+│   ├── assets/
+│   │   ├── icons/
+│   │   └── sounds/
+│   ├── manifest.json
+│   └── service-worker.js
+├── src/
+│   ├── app/
+│   │   ├── layout.tsx
+│   │   ├── page.tsx
+│   │   └── games/
+│   │       ├── jigsaw/
+│   │       ├── memory/
+│   │       ├── coloring/
+│   │       ├── english/
+│   │       ├── word-match/
+│   │       └── piano/
+│   └── components/
+└── vanilla_backup/
 ```
 
----
+## การติดตั้งและรัน
 
-## 🚀 วิธีรันในเครื่อง
-
-### ง่ายที่สุด — VS Code Live Server
-1. เปิดโฟลเดอร์ `kids_game/` ใน VS Code
-2. ติดตั้ง Extension **Live Server** (ritwickdey.LiveServer)
-3. คลิกขวาที่ `index.html` → **Open with Live Server**
-4. เปิด `http://127.0.0.1:5500` ในเบราว์เซอร์
-
-### Python HTTP Server
 ```bash
-cd kids_game
-python -m http.server 3000
-# เปิด http://localhost:3000
+npm install
+npm run dev
 ```
 
----
+เปิดที่ `http://localhost:3000`
 
-## 🌐 Deploy บน Vercel
+## คำสั่งที่ใช้บ่อย
 
-### วิธีที่ 1: Dashboard
-1. Push โปรเจกต์ขึ้น GitHub
-2. เข้า [vercel.com](https://vercel.com) → New Project → Import
-3. Framework = **Other** (Static)
-4. กด **Deploy**
-
-### วิธีที่ 2: CLI
 ```bash
-npm i -g vercel
-cd kids_game
-vercel --prod
+npm run dev
+npm run build
+npm run start
+npm run lint
 ```
 
-> ⚡ Deploy ง่ายมาก เพราะเป็น Static HTML ล้วน ไม่มี Build Process
+## หมายเหตุเทคนิค
 
----
+- Asset ทั้งหมดเรียกผ่าน `/assets/...` จาก `public/assets`
+- เกม Coloring เพิ่ม guard + cleanup ตอน unmount เพื่อกัน interval ค้าง
+- เกมที่ยังใช้ DOM logic เดิมเรียกผ่าน `init*Game()` ภายใน `useEffect`
+- Service Worker รองรับเส้นทางแบบ Next App Router
 
-## 🎯 กลุ่มเป้าหมาย
+## หมายเหตุสำหรับการย้ายระบบ
 
-- เด็กเล็กอายุ **2-5 ปี**
-- เน้นเกมที่ **สร้างสรรค์** ไม่มีการแข่งขันหรือแพ้
-- ออกแบบให้ **ผู้ปกครองเล่นร่วมกับเด็ก** ได้อย่างสนุกสนาน
-
----
-
-## 📄 License
-
-ไฟล์เสียงสัตว์ที่บันทึกเอง — สงวนสิทธิ์  
-Source code — MIT License
+- โค้ด Static เดิมเก็บไว้ที่ `vanilla_backup/` สำหรับอ้างอิง
+- เมื่อตรวจสอบครบถ้วนแล้ว ค่อยพิจารณาลบ `vanilla_backup/`
