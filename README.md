@@ -38,8 +38,27 @@
 - **Canvas API** — ระบบ Pixel Analyzer สำหรับเกมระบายสี
 - **CSS Animations** — Particle, Bounce, Glow, Glassmorphism
 - **Google Fonts** (Fredoka, Noto Sans Thai) — ฟอนต์น่ารักสำหรับเด็ก
+- **PWA** — Web App Manifest + Service Worker รองรับ Offline และ Install บน Home Screen
 
 ---
+
+## 📱 ติดตั้งแอปบน iPhone / iPad (PWA)
+
+เล่นแบบ Fullscreen ไม่มี browser bar เหมือน Native App!
+
+### iPhone / iPad (Safari)
+1. เปิด Safari แล้วไปที่ URL ของเกม (ต้อง HTTPS เช่น Vercel)
+2. กดปุ่ม **Share** (กล่องมีลูกศรขึ้น) ที่แถบล่าง
+3. เลือก **"เพิ่มในหน้าจอโฮม"** (Add to Home Screen)
+4. กด **"เพิ่ม"** — ไอคอนจะปรากฏบนหน้าจอโฮม 🎮
+5. เปิดจากไอคอน → เล่นแบบ **Fullscreen** ไม่มี Safari bar!
+
+### Android (Chrome)
+1. เปิด Chrome แล้วไปที่ URL ของเกม
+2. กดปุ่ม **⋮ เมนู** → **"เพิ่มในหน้าจอหลัก"**
+3. หรือรอ Banner "ติดตั้งแอป" ที่จะปรากฏอัตโนมัติ
+
+> 💡 **รองรับ Offline**: เมื่อติดตั้งแล้ว สามารถเล่นได้แม้ไม่มีอินเทอร์เน็ต (Service Worker จะ Cache ทุกไฟล์ไว้ในเครื่อง)
 
 ## 📁 โครงสร้างไฟล์
 

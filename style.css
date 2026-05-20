@@ -23,6 +23,7 @@
 
 html, body {
   min-height: 100vh;
+  min-height: 100dvh;
   font-family: var(--font);
   overflow-x: hidden;
 }
@@ -35,6 +36,10 @@ body {
   align-items: center;
   justify-content: center;
   padding: 20px;
+  padding-top: calc(20px + env(safe-area-inset-top));
+  padding-bottom: calc(20px + env(safe-area-inset-bottom));
+  padding-left: calc(20px + env(safe-area-inset-left));
+  padding-right: calc(20px + env(safe-area-inset-right));
   position: relative;
 }
 

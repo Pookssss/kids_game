@@ -2,14 +2,35 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>ABC Animals | เรียนรู้ตัวอักษรภาษาอังกฤษ</title>
   <meta name="description" content="เรียนรู้ตัวอักษร A-Z ผ่านภาพสัตว์น่ารัก พร้อมเสียงออกเสียงจริง สำหรับเด็กอายุ 2-5 ปี">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Noto+Sans+Thai:wght@300..700&display=swap" rel="stylesheet">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Theme Color -->
+  <meta name="theme-color" content="#667eea">
+  <!-- iOS / iPadOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kids Game">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/icons/icon-152.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/icons/icon-96.png">
   <link rel="stylesheet" href="style.css">
-</head>
+  <!-- Register Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(function(reg) { console.log('SW registered:', reg.scope); })
+          .catch(function(err) { console.log('SW error:', err); });
+      });
+    }
+  </script></head>
 <body>
   <div class="app-container">
 

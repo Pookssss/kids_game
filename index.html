@@ -2,13 +2,38 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Kids Game Zone | เกมสนุกสำหรับเด็ก</title>
-  <meta name="description" content="คลังเกมสนุกสำหรับเด็กเล็ก อายุ 2-5 ปี - จิ๊กซอว์, ระบายสี, จับคู่ภาพ">
+  <meta name="description" content="คลังเกมสนุกสำหรับเด็กเล็ก อายุ 2-5 ปี - จิ๊กซอว์, ระบายสี, จับคู่ภาพ, เปียโนสัตว์">
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="/manifest.json">
+  <!-- Theme Color (browser & Android) -->
+  <meta name="theme-color" content="#667eea">
+  <!-- iOS / iPadOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Kids Game">
+  <link rel="apple-touch-icon" href="/assets/icons/icon-180.png">
+  <link rel="apple-touch-icon" sizes="152x152" href="/assets/icons/icon-152.png">
+  <link rel="apple-touch-icon" sizes="120x120" href="/assets/icons/icon-120.png">
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/icons/icon-96.png">
+  <link rel="icon" type="image/png" sizes="48x48" href="/assets/icons/icon-48.png">
+  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300..700&family=Noto+Sans+Thai:wght@300..700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <!-- Register Service Worker -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/service-worker.js')
+          .then(reg => console.log('SW registered:', reg.scope))
+          .catch(err => console.log('SW error:', err));
+      });
+    }
+  </script>
 </head>
 <body>
   <!-- Floating bubbles background -->
