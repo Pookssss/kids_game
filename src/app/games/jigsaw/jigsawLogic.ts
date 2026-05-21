@@ -713,19 +713,22 @@ export const Game = {
       // Store stats silently for parent verification
       const mins = String(Math.floor(this.elapsedSeconds / 60)).padStart(2, '0');
       const secs = String(this.elapsedSeconds % 60).padStart(2, '0');
-      document.getElementById('victory-time').textContent = `${mins}:${secs}`;
       
       
       let diffStr = "ง่ายที่สุด (2x2)";
       if (this.gridSize === 3) diffStr = "ง่าย (3x3)";
       if (this.gridSize === 6) diffStr = "ปานกลาง (6x6)";
       if (this.gridSize === 9) diffStr = "ท้าทาย (9x9)";
-      
 
-      // Show toddler victory modal after a tiny delay
-      setTimeout(() => {
-        
-      }, 700);
+      // Notify React layer to open victory modal and render stats.
+      if (this.callbacks.onVictory) {
+        this.callbacks.onVictory({
+          mins,
+          secs,
+          moves: this.movesCount,
+          diff: diffStr,
+        });
+      }
     }
   },
 

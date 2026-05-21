@@ -7,6 +7,18 @@ import Modal from "@/components/Modal";
 import { Game, AudioSynth } from "./jigsawLogic";
 import "./jigsaw.css";
 
+const JIGSAW_LAST_ANIMAL_KEY = "kids_game_jigsaw_last_animal";
+const ANIMAL_OPTIONS = [
+  { id: "panda", label: "แพนด้า" },
+  { id: "lion", label: "สิงโต" },
+  { id: "elephant", label: "ช้างน้อย" },
+  { id: "fox", label: "จิ้งจอก" },
+  { id: "cat", label: "แมวเหมียว" },
+  { id: "koala", label: "โคอาล่า" },
+  { id: "rabbit", label: "กระต่าย" },
+  { id: "monkey", label: "ลิงซน" },
+];
+
 export default function JigsawGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   
@@ -33,6 +45,15 @@ export default function JigsawGame() {
 
   useEffect(() => {
     if (canvasRef.current) {
+      const animalIds = ANIMAL_OPTIONS.map((a) => a.id);
+      const lastAnimal = localStorage.getItem(JIGSAW_LAST_ANIMAL_KEY);
+      const availableAnimals = animalIds.filter((id) => id !== lastAnimal);
+      const randomPool = availableAnimals.length > 0 ? availableAnimals : animalIds;
+      const randomAnimal = randomPool[Math.floor(Math.random() * randomPool.length)];
+
+      Game.currentAnimal = randomAnimal;
+      localStorage.setItem(JIGSAW_LAST_ANIMAL_KEY, randomAnimal);
+
       Game.init(canvasRef.current, {
         setLoading: setIsLoading,
         onVictory: (data: any) => setVictoryData(data),
@@ -110,16 +131,7 @@ export default function JigsawGame() {
     Game.loadPuzzle();
   };
 
-  const animals = [
-    { id: "panda", label: "แพนด้า" },
-    { id: "lion", label: "สิงโต" },
-    { id: "elephant", label: "ช้างน้อย" },
-    { id: "fox", label: "จิ้งจอก" },
-    { id: "cat", label: "แมวเหมียว" },
-    { id: "koala", label: "โคอาล่า" },
-    { id: "rabbit", label: "กระต่าย" },
-    { id: "monkey", label: "ลิงซน" },
-  ];
+  const animals = ANIMAL_OPTIONS;
 
   return (
     <div className="app-container">
@@ -291,7 +303,17 @@ export default function JigsawGame() {
         <div className="modal-buttons">
           <button
             className="modal-btn primary"
-            style={{ fontSize: "1.3rem", padding: "18px 40px", borderRadius: "20px" }}
+            style={{ fontSize: "1.1rem", padding: "14px 24px", borderRadius: "16px" }}
+            onClick={() => {
+              setVictoryData(null);
+              Game.loadPuzzle();
+            }}
+          >
+            เล่นอีกรอบ 🔄
+          </button>
+          <button
+            className="modal-btn secondary"
+            style={{ fontSize: "1.1rem", padding: "14px 24px", borderRadius: "16px" }}
             onClick={() => {
               setVictoryData(null);
               const idx = animals.findIndex((a) => a.id === Game.currentAnimal);
@@ -300,7 +322,7 @@ export default function JigsawGame() {
               Game.loadPuzzle();
             }}
           >
-            เล่นอีกรอบ 🔄
+            ถัดไป ▶️
           </button>
         </div>
       </Modal>
