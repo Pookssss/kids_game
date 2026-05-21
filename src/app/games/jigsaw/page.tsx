@@ -139,7 +139,7 @@ export default function JigsawGame() {
         sound: AudioSynth.enabled,
         imageMode: hasCustomImage ? "upload" : "preset",
         aspectRatio: (Game.cropAspectRatio || "free") as AspectRatioLock,
-        region: Game.imageRegion || "full",
+        region: (Game.imageRegion || "full") as "full" | "top" | "bottom" | "left" | "right" | "center",
       });
       setCustomImagePreview(hasCustomImage ? Game.customImageSrc : null);
       setCustomCropRect(Game.customCropRect || null);
@@ -310,10 +310,10 @@ export default function JigsawGame() {
     AudioSynth.enabled = draftSettings.sound;
     Game.imageRegion = draftSettings.region;
     Game.cropAspectRatio = draftSettings.aspectRatio;
-    Game.customCropRect = customCropRect;
+    Game.customCropRect = customCropRect as any;
 
     if (draftSettings.imageMode === "upload" && customImagePreview) {
-      Game.customImageSrc = customImagePreview;
+      Game.customImageSrc = customImagePreview as any;
       Game.useCustomImageNextRoundOnly = true;
     } else {
       Game.customImageSrc = null;
