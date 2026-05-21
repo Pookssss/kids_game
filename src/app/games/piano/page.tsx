@@ -29,12 +29,17 @@ export default function PianoPage() {
               <button className="mode-pill" data-mode="mix" id="mode-mix">✨ มิกซ์</button>
             </div>
 
+            <button className="mode-pill" id="btn-sound-toggle" title="เปิด/ปิดเสียง">🔊</button>
+
             <div className="song-selector-wrap">
               <select id="song-select" className="song-select" defaultValue="free">
                 <option value="free">🎵 เล่นตามใจชอบ</option>
                 <option value="twinkle">⭐ Twinkle Twinkle</option>
                 <option value="mary">🐑 Mary Had a Little Lamb</option>
                 <option value="jingle">🔔 Jingle Bells</option>
+                <option value="happy">👏 If You're Happy</option>
+                <option value="oldmac">🐮 Old MacDonald</option>
+                <option value="row">🚣 Row Row Row Your Boat</option>
               </select>
             </div>
           </div>

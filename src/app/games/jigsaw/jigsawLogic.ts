@@ -4,6 +4,8 @@
  * Features Parent Gate, 2x2 difficulty, and Web Audio synth
  */
 
+import { getAnimalImageById } from "@/lib/animalCatalog";
+
 // Sound Synthesizer via Web Audio API
 export const AudioSynth = {
   ctx: null,
@@ -585,9 +587,10 @@ export const Game = {
 
     // Set source image (custom image can be used for one round only)
     const usingCustomImage = !!this.customImageSrc;
+    const defaultImage = getAnimalImageById(this.currentAnimal, `/assets/cute_${this.currentAnimal}.png`);
     const sourceImage = usingCustomImage
       ? this.customImageSrc
-      : `../../assets/cute_${this.currentAnimal}.png`;
+      : defaultImage;
 
     this.imageObj.src = sourceImage;
 
@@ -609,8 +612,8 @@ export const Game = {
     };
 
     this.imageObj.onerror = () => {
-      if (sourceImage !== `../../assets/cute_${this.currentAnimal}.png`) {
-        this.imageObj.src = `../../assets/cute_${this.currentAnimal}.png`;
+      if (sourceImage !== defaultImage) {
+        this.imageObj.src = defaultImage;
         return;
       }
       if(this.callbacks.setLoading) this.callbacks.setLoading(false);

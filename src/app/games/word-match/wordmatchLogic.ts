@@ -6,18 +6,14 @@
 // for ages 2‑5, so the UI is big, the feedback is immediate, and the code is
 // lightweight (vanilla JS, no build steps).
 
+import { getAnimalImageCatalog } from "@/lib/animalCatalog";
+import { loadGlobalSoundEnabled, saveGlobalSoundEnabled } from "@/lib/soundPreference";
+
 export function initWordMatchGame() {
-  const assetsPath = "/assets/"; // Path to root assets directory
-  const animalList = [
-    { name: "Panda",    file: "cute_panda.png" },
-    { name: "Lion",     file: "cute_lion.png" },
-    { name: "Elephant", file: "cute_elephant.png" },
-    { name: "Rabbit",   file: "cute_rabbit.png" },
-    { name: "Koala",    file: "cute_koala.png" },
-    { name: "Cat",      file: "cute_cat.png" },
-    { name: "Fox",      file: "cute_fox.png" },
-    { name: "Monkey",   file: "cute_monkey.png" }
-  ];
+  const animalList = getAnimalImageCatalog().map((animal) => ({
+    name: animal.labelEn,
+    image: animal.image,
+  }));
 
   // ---------------------------------------------------------------------
   // UI references
@@ -42,7 +38,8 @@ export function initWordMatchGame() {
   let selectedWord  = null; // HTML element
   let matches = 0;
   let totalPairs = 0;
-  let soundEnabled = true;
+  let soundEnabled = loadGlobalSoundEnabled(true);
+  btnSound.textContent = soundEnabled ? "🔊" : "🔇";
 
   // ---------------------------------------------------------------------
   // Utility – Speech synthesis (optional sound)
@@ -69,14 +66,14 @@ export function initWordMatchGame() {
     scoreTot.textContent = totalPairs;
     // pick random animals
     const shuffled = animalList.slice().sort(() => 0.5 - Math.random());
-    const chosen = shuffled.slice(0, pairsCount);
+    const chosen = shuffled.slice(0, Math.min(pairsCount, animalList.length));
     // create image cards
     chosen.forEach(item => {
       const card = document.createElement("div");
       card.className = "card image-card";
       card.dataset.name = item.name;
       const img = document.createElement("img");
-      img.src = assetsPath + item.file;
+      img.src = item.image;
       img.alt = item.name;
       card.appendChild(img);
       imageGrid.appendChild(card);
@@ -160,10 +157,11 @@ export function initWordMatchGame() {
     });
   });
 
-  btnSound.addEventListener("click", () => {
+  btnSound.onclick = () => {
     soundEnabled = !soundEnabled;
-    btnSound.textContent = soundEnabled ? "🔊" : "🔈";
-  });
+    saveGlobalSoundEnabled(soundEnabled);
+    btnSound.textContent = soundEnabled ? "🔊" : "🔇";
+  };
 
   btnNew.addEventListener("click", startRound);
 

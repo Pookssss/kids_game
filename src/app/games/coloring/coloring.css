@@ -358,6 +358,8 @@ h1 {
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 12px;
+  overflow-y: auto;
   z-index: 100;
   opacity: 0;
   pointer-events: none;
@@ -368,7 +370,7 @@ h1 {
 .victory-card {
   background: white;
   border-radius: 36px;
-  padding: 50px 36px 36px;
+  padding: 24px 36px 36px;
   text-align: center;
   position: relative;
   box-shadow: 0 30px 70px rgba(0,0,0,0.18);
@@ -376,21 +378,25 @@ h1 {
   transition: transform 0.45s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   max-width: 420px;
   width: 90%;
+  max-height: calc(100dvh - 24px);
+  overflow-y: auto;
 }
 .modal-overlay.active .victory-card { transform: scale(1) translateY(0); }
 
 .victory-ribbon {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  transform: translateX(-50%);
+  position: relative;
   background: linear-gradient(90deg, var(--green), #0984e3, var(--pink));
   color: white;
   font-size: 1.2rem;
   font-weight: 800;
   padding: 6px 28px;
   border-radius: 50px;
-  white-space: nowrap;
+  white-space: normal;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 14px;
+  text-align: center;
+  line-height: 1.25;
   box-shadow: 0 8px 20px rgba(0,184,148,0.35);
 }
 
@@ -444,4 +450,35 @@ h1 {
   .animal-pill span { display: none; }
   .animal-pill { padding: 6px; }
   .canvas-card { padding: 12px; }
+
+  .victory-card {
+    width: 100%;
+    border-radius: 24px;
+    padding: 18px 16px 16px;
+    max-height: calc(100dvh - 16px);
+  }
+
+  .victory-ribbon {
+    font-size: 1rem;
+    padding: 6px 14px;
+    margin-bottom: 10px;
+  }
+
+  .victory-animal-preview {
+    width: 104px;
+    height: 104px;
+  }
+
+  .victory-card h2 {
+    font-size: 1.35rem;
+  }
+
+  .victory-sub {
+    font-size: 0.95rem;
+    margin-bottom: 14px;
+  }
+
+  .victory-btns {
+    flex-direction: column;
+  }
 }

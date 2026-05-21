@@ -4,20 +4,17 @@ import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import GameHeader from "@/components/GameHeader";
 import Modal from "@/components/Modal";
+import { getAnimalImageCatalog } from "@/lib/animalCatalog";
+import { loadGlobalSoundEnabled, saveGlobalSoundEnabled } from "@/lib/soundPreference";
 import { Game, AudioSynth } from "./jigsawLogic";
 import "./jigsaw.css";
 
 const JIGSAW_LAST_ANIMAL_KEY = "kids_game_jigsaw_last_animal";
-const ANIMAL_OPTIONS = [
-  { id: "panda", label: "แพนด้า" },
-  { id: "lion", label: "สิงโต" },
-  { id: "elephant", label: "ช้างน้อย" },
-  { id: "fox", label: "จิ้งจอก" },
-  { id: "cat", label: "แมวเหมียว" },
-  { id: "koala", label: "โคอาล่า" },
-  { id: "rabbit", label: "กระต่าย" },
-  { id: "monkey", label: "ลิงซน" },
-];
+const ANIMAL_OPTIONS = getAnimalImageCatalog().map((animal) => ({
+  id: animal.id,
+  label: animal.labelTh,
+  image: animal.image,
+}));
 
 type AspectRatioLock = "free" | "1:1" | "4:3" | "16:9";
 type CropRect = { x: number; y: number; width: number; height: number };
@@ -48,6 +45,7 @@ export default function JigsawGame() {
   // Parent Gate & Settings States
   const [showGate, setShowGate] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [soundEnabled, setSoundEnabled] = useState(true);
   const [gateQuestion, setGateQuestion] = useState({ q: "", ans: 0 });
   const [gateInput, setGateInput] = useState("");
   const [gateError, setGateError] = useState(false);
@@ -65,6 +63,10 @@ export default function JigsawGame() {
   });
 
   useEffect(() => {
+    const persistedSoundEnabled = loadGlobalSoundEnabled(true);
+    AudioSynth.enabled = persistedSoundEnabled;
+    setSoundEnabled(persistedSoundEnabled);
+
     if (canvasRef.current) {
       const animalIds = ANIMAL_OPTIONS.map((a) => a.id);
       const lastAnimal = localStorage.getItem(JIGSAW_LAST_ANIMAL_KEY);
@@ -368,6 +370,8 @@ export default function JigsawGame() {
     Game.showHint = draftSettings.hint;
     Game.showBordersOnly = draftSettings.border;
     AudioSynth.enabled = draftSettings.sound;
+    saveGlobalSoundEnabled(draftSettings.sound);
+    setSoundEnabled(draftSettings.sound);
     Game.imageRegion = draftSettings.region;
     Game.cropAspectRatio = draftSettings.aspectRatio;
     Game.customCropRect = customCropRect as any;
@@ -398,6 +402,19 @@ export default function JigsawGame() {
         icon="🧩"
         actions={
           <>
+            <button
+              className="parent-settings-trigger"
+              title="เปิด/ปิดเสียง"
+              onClick={() => {
+                const next = !AudioSynth.enabled;
+                AudioSynth.enabled = next;
+                saveGlobalSoundEnabled(next);
+                setSoundEnabled(next);
+              }}
+            >
+              <span className="gear-icon">{soundEnabled ? "🔊" : "🔇"}</span>
+              <span className="gear-text">{soundEnabled ? "เปิดเสียง" : "ปิดเสียง"}</span>
+            </button>
             <button
               className="parent-settings-trigger"
               onClick={() => { AudioSynth.playPick(); Game.shufflePieces(); }}
@@ -581,7 +598,7 @@ export default function JigsawGame() {
                         onClick={() => { AudioSynth.playPick(); setDraftSettings({ ...draftSettings, animal: a.id }); }}
                       >
                         <div className="animal-img-wrapper">
-                          <Image src={`/assets/cute_${a.id}.png`} alt={a.label} width={60} height={60} />
+                          <Image src={a.image} alt={a.label} width={60} height={60} />
                         </div>
                         <span>{a.label}</span>
                       </button>

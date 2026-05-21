@@ -1,6 +1,8 @@
 // @ts-nocheck
 // Animal Sound Piano Game Logic
 // ---------------------------------------------------------------------
+import { loadGlobalSoundEnabled, saveGlobalSoundEnabled } from "@/lib/soundPreference";
+
 export function initPianoGame() {
   // Frequencies for our 8 musical keys (C4 to C5)
   const noteFreqs = {
@@ -48,6 +50,18 @@ export function initPianoGame() {
     jingle: {
       name: "Jingle Bells",
       notes: [2, 2, 2, 2, 2, 2, 2, 4, 0, 1, 2]
+    },
+    happy: {
+      name: "If You're Happy",
+      notes: [0, 0, 3, 3, 3, 3, 2, 2, 1, 1, 0]
+    },
+    oldmac: {
+      name: "Old MacDonald Had a Farm",
+      notes: [4, 4, 4, 1, 2, 2, 1, 6, 6, 5, 5, 4, 1, 4, 4, 4, 1, 2, 2, 1]
+    },
+    row: {
+      name: "Row Row Row Your Boat",
+      notes: [0, 0, 0, 1, 2, 2, 1, 2, 3, 4, 7, 7, 4, 4, 2, 2, 0]
     }
   };
 
@@ -76,6 +90,7 @@ export function initPianoGame() {
   let songRoundTarget = 1;   // how many rounds to play
   let songRoundsCompleted = 0;
   let audioContext = null;
+  let soundEnabled = loadGlobalSoundEnabled(true);
 
   // ---------------------------------------------------------------------
   // DOM References
@@ -95,6 +110,10 @@ export function initPianoGame() {
   const particleContainer = document.getElementById("particle-container");
   const victoryModal = document.getElementById("victory-modal");
   const btnNextSong = document.getElementById("btn-next-song");
+  const btnSoundToggle = document.getElementById("btn-sound-toggle");
+  if (btnSoundToggle) {
+    btnSoundToggle.textContent = soundEnabled ? "🔊" : "🔇";
+  }
   // Song Guide Panel elements
   const gameMain = document.querySelector(".game-main");
   const songGuidePanel = document.getElementById("song-guide-panel");
@@ -118,6 +137,7 @@ export function initPianoGame() {
 
   // Synthesizes a warm chime/bell musical note
   function playSynthNote(freq) {
+    if (!soundEnabled) return;
     if (!audioContext) return;
     
     const now = audioContext.currentTime;
@@ -150,6 +170,7 @@ export function initPianoGame() {
 
   // Play real animal sound file (with playback rate tuned to the piano key)
   function playAnimalSpeech(index, noteName) {
+    if (!soundEnabled) return;
     const audio = audioCache[index];
     if (!audio) return;
 
@@ -415,6 +436,14 @@ export function initPianoGame() {
       initAudio();
     });
   });
+
+  if (btnSoundToggle) {
+    btnSoundToggle.onclick = () => {
+      soundEnabled = !soundEnabled;
+      saveGlobalSoundEnabled(soundEnabled);
+      btnSoundToggle.textContent = soundEnabled ? "🔊" : "🔇";
+    };
+  }
 
   // 5. Song Guide Selector
   songSelect.addEventListener("change", (e) => {

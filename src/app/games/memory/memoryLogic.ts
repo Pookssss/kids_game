@@ -4,16 +4,14 @@
  * Flip cards to find matching animal pairs!
  */
 
-const ANIMALS = [
-  { id: 'panda',    label: 'แพนด้า',    src: '/assets/cute_panda.png' },
-  { id: 'lion',     label: 'สิงโต',     src: '/assets/cute_lion.png' },
-  { id: 'elephant', label: 'ช้างน้อย',  src: '/assets/cute_elephant.png' },
-  { id: 'fox',      label: 'จิ้งจอก',   src: '/assets/cute_fox.png' },
-  { id: 'cat',      label: 'แมวเหมียว', src: '/assets/cute_cat.png' },
-  { id: 'koala',    label: 'โคอาล่า',   src: '/assets/cute_koala.png' },
-  { id: 'rabbit',   label: 'กระต่าย',   src: '/assets/cute_rabbit.png' },
-  { id: 'monkey',   label: 'ลิงซน',     src: '/assets/cute_monkey.png' },
-];
+import { getAnimalImageCatalog } from "@/lib/animalCatalog";
+import { loadGlobalSoundEnabled, saveGlobalSoundEnabled } from "@/lib/soundPreference";
+
+const ANIMALS = getAnimalImageCatalog().map((animal) => ({
+  id: animal.id,
+  label: animal.labelTh,
+  src: animal.image,
+}));
 
 const MODES = {
   easy:   { pairs: 4,  cols: 4 },
@@ -68,7 +66,17 @@ const Game = {
   total: 0,
 
   init() {
+    Audio$.enabled = loadGlobalSoundEnabled(true);
     this.bindUI();
+    const soundBtn = document.getElementById('btn-sound-toggle');
+    if (soundBtn) {
+      soundBtn.textContent = Audio$.enabled ? '🔊' : '🔇';
+      soundBtn.onclick = (e) => {
+        Audio$.enabled = !Audio$.enabled;
+        saveGlobalSoundEnabled(Audio$.enabled);
+        e.currentTarget.textContent = Audio$.enabled ? '🔊' : '🔇';
+      };
+    }
     this.start('easy');
   },
 
@@ -87,11 +95,6 @@ const Game = {
       this.start(this.mode);
     });
 
-    document.getElementById('btn-sound-toggle').addEventListener('click', (e) => {
-      Audio$.enabled = !Audio$.enabled;
-      e.currentTarget.textContent = Audio$.enabled ? '🔊' : '🔇';
-    });
-
     document.getElementById('btn-play-again').addEventListener('click', () => {
       document.getElementById('victory-modal').classList.remove('active');
       this.start(this.mode);
@@ -106,10 +109,11 @@ const Game = {
     this.locked = false;
 
     const { pairs, cols } = MODES[mode];
-    this.total = pairs;
+    const usablePairs = Math.min(pairs, ANIMALS.length);
+    this.total = usablePairs;
 
     // Pick random animals
-    const pool = [...ANIMALS].sort(() => Math.random() - 0.5).slice(0, pairs);
+    const pool = [...ANIMALS].sort(() => Math.random() - 0.5).slice(0, usablePairs);
     const deck = [...pool, ...pool].sort(() => Math.random() - 0.5);
 
     this.cards = deck.map((animal, i) => ({

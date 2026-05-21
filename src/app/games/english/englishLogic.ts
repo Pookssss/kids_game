@@ -6,6 +6,9 @@
  * Uses Web Speech API — no external audio files needed.
  */
 
+import { getAnimalImageByEnglishName } from "@/lib/animalCatalog";
+import { loadGlobalSoundEnabled, saveGlobalSoundEnabled } from "@/lib/soundPreference";
+
 // ─── Alphabet Data ───
 const ALPHABET = [
   { letter:'A', word:'Ant',      emoji:'🐜', phonics:'"แอ"',  color:'#ff6b81', color2:'#ff4757' },
@@ -134,8 +137,9 @@ function renderModal(idx) {
   // Animal display
   const display = $('modal-animal-display');
   display.style.borderColor = d.color;
-  if (d.img) {
-    display.innerHTML = `<img src="${d.img}" alt="${d.word}">`;
+  const animalImage = getAnimalImageByEnglishName(d.word, d.img || '');
+  if (animalImage) {
+    display.innerHTML = `<img src="${animalImage}" alt="${d.word}">`;
   } else {
     display.textContent = d.emoji;
   }
@@ -209,9 +213,13 @@ function renderGrid() {
 
 // ─── Init ───
 function init() {
+  State.soundEnabled = loadGlobalSoundEnabled(true);
   Speech.loadVoice();
   renderGrid();
   updateLearnedCount();
+
+  const soundBtn = $('btn-sound-toggle');
+  if (soundBtn) soundBtn.textContent = State.soundEnabled ? '🔊' : '🔇';
 
   // Modal close
   $('modal-close').addEventListener('click', closeModal);
@@ -256,11 +264,14 @@ function init() {
   });
 
   // Sound toggle
-  $('btn-sound-toggle').addEventListener('click', e => {
-    State.soundEnabled = !State.soundEnabled;
-    e.currentTarget.textContent = State.soundEnabled ? '🔊' : '🔇';
-    if (!State.soundEnabled) speechSynthesis.cancel();
-  });
+  if (soundBtn) {
+    soundBtn.onclick = (e) => {
+      State.soundEnabled = !State.soundEnabled;
+      saveGlobalSoundEnabled(State.soundEnabled);
+      e.currentTarget.textContent = State.soundEnabled ? '🔊' : '🔇';
+      if (!State.soundEnabled) speechSynthesis.cancel();
+    };
+  }
 
   // Reset
   $('btn-reset').addEventListener('click', () => {

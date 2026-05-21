@@ -2,19 +2,15 @@
 
 import { useEffect } from "react";
 import GameHeader from "@/components/GameHeader";
+import { getAnimalImageCatalog } from "@/lib/animalCatalog";
 import { initColoringGame } from "./coloringLogic";
 import "./coloring.css";
 
-const animals = [
-  { id: "panda", label: "แพนด้า" },
-  { id: "lion", label: "สิงโต" },
-  { id: "elephant", label: "ช้างน้อย" },
-  { id: "fox", label: "จิ้งจอก" },
-  { id: "cat", label: "แมวเหมียว" },
-  { id: "koala", label: "โคอาล่า" },
-  { id: "rabbit", label: "กระต่าย" },
-  { id: "monkey", label: "ลิงซน" },
-];
+const animals = getAnimalImageCatalog().map((animal) => ({
+  id: animal.id,
+  label: animal.labelTh,
+  image: animal.image,
+}));
 
 export default function ColoringGamePage() {
   useEffect(() => {
@@ -53,7 +49,7 @@ export default function ColoringGamePage() {
               data-animal={animal.id}
               id={`pick-${animal.id}`}
             >
-              <img src={`/assets/cute_${animal.id}.png`} alt={animal.label} />
+              <img src={animal.image} alt={animal.label} />
               <span>{animal.label}</span>
             </button>
           ))}

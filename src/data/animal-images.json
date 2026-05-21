@@ -1,0 +1,70 @@
+{
+  "animals": [
+    {
+      "id": "panda",
+      "labelTh": "แพนด้า",
+      "labelEn": "Panda",
+      "image": "/assets/cute_panda.png"
+    },
+    {
+      "id": "lion",
+      "labelTh": "สิงโต",
+      "labelEn": "Lion",
+      "image": "/assets/cute_lion.png"
+    },
+    {
+      "id": "elephant",
+      "labelTh": "ช้างน้อย",
+      "labelEn": "Elephant",
+      "image": "/assets/cute_elephant.png"
+    },
+    {
+      "id": "fox",
+      "labelTh": "จิ้งจอก",
+      "labelEn": "Fox",
+      "image": "/assets/cute_fox.png"
+    },
+    {
+      "id": "cat",
+      "labelTh": "แมวเหมียว",
+      "labelEn": "Cat",
+      "image": "/assets/cute_cat.png"
+    },
+    {
+      "id": "koala",
+      "labelTh": "โคอาล่า",
+      "labelEn": "Koala",
+      "image": "/assets/cute_koala.png"
+    },
+    {
+      "id": "rabbit",
+      "labelTh": "กระต่าย",
+      "labelEn": "Rabbit",
+      "image": "/assets/cute_rabbit.png"
+    },
+    {
+      "id": "monkey",
+      "labelTh": "ลิงซน",
+      "labelEn": "Monkey",
+      "image": "/assets/cute_monkey.png"
+    },
+    {
+      "id": "one_rabbit",
+      "labelTh": "กระต่ายตัวเดียว",
+      "labelEn": "One Rabbit",
+      "image": "/assets/cute_one_rabbit.png"
+    },
+    {
+      "id": "red_panda",
+      "labelTh": "แพนด้าแดง",
+      "labelEn": "Red Panda",
+      "image": "/assets/cute_red_panda.png"
+    },
+    {
+      "id": "cute_couple_rabbit",
+      "labelTh": "กระต่ายคู่รัก",
+      "labelEn": "Couple Rabbit",
+      "image": "/assets/cute_couple_rabbit.png"
+    }
+  ]
+}

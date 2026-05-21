@@ -5,21 +5,21 @@
  * Uses two-layer canvas: gray overlay on top, full-color image beneath.
  */
 
-const ANIMALS = [
-  { id: 'panda',    label: 'แพนด้า',    src: '/assets/cute_panda.png' },
-  { id: 'lion',     label: 'สิงโต',     src: '/assets/cute_lion.png' },
-  { id: 'elephant', label: 'ช้างน้อย',  src: '/assets/cute_elephant.png' },
-  { id: 'fox',      label: 'จิ้งจอก',   src: '/assets/cute_fox.png' },
-  { id: 'cat',      label: 'แมวเหมียว', src: '/assets/cute_cat.png' },
-  { id: 'koala',    label: 'โคอาล่า',   src: '/assets/cute_koala.png' },
-  { id: 'rabbit',   label: 'กระต่าย',   src: '/assets/cute_rabbit.png' },
-  { id: 'monkey',   label: 'ลิงซน',     src: '/assets/cute_monkey.png' },
-];
+import { getAnimalImageCatalog } from "@/lib/animalCatalog";
+import { loadGlobalSoundEnabled, saveGlobalSoundEnabled } from "@/lib/soundPreference";
+
+const ANIMALS = getAnimalImageCatalog().map((animal) => ({
+  id: animal.id,
+  label: animal.labelTh,
+  src: animal.image,
+}));
 
 // ─── Audio Synthesizer ───
 const Audio$ = {
   ctx: null,
   enabled: true,
+  activeOscillators: new Set(),
+  winTimers: new Set(),
   init() {
     if (!this.ctx) this.ctx = new (window.AudioContext || window.webkitAudioContext)();
     if (this.ctx.state === 'suspended') this.ctx.resume();
@@ -36,6 +36,12 @@ const Audio$ = {
       gain.gain.setValueAtTime(vol, this.ctx.currentTime);
       gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + dur);
       osc.connect(gain); gain.connect(this.ctx.destination);
+      this.activeOscillators.add(osc);
+      osc.onended = () => {
+        this.activeOscillators.delete(osc);
+        try { osc.disconnect(); } catch (e) {}
+        try { gain.disconnect(); } catch (e) {}
+      };
       osc.start(); osc.stop(this.ctx.currentTime + dur + 0.01);
     } catch (e) {}
   },
@@ -45,9 +51,25 @@ const Audio$ = {
     this._play(freq, freq + 40, 0.06, 'sine', 0.06);
   },
   win() {
+    this.stopAll();
+    if (!this.enabled) return;
     [261, 330, 392, 523, 659, 784, 1047].forEach((f, i) =>
-      setTimeout(() => this._play(f, f * 1.4, 0.22, 'triangle', 0.14), i * 90)
+      {
+        const timerId = setTimeout(() => {
+          this.winTimers.delete(timerId);
+          this._play(f, f * 1.4, 0.22, 'triangle', 0.14);
+        }, i * 90);
+        this.winTimers.add(timerId);
+      }
     );
+  },
+  stopAll() {
+    this.winTimers.forEach((id) => clearTimeout(id));
+    this.winTimers.clear();
+    this.activeOscillators.forEach((osc) => {
+      try { osc.stop(); } catch (e) {}
+    });
+    this.activeOscillators.clear();
   },
 };
 
@@ -65,13 +87,20 @@ const Game = {
   hasStarted: false,
   victoryThreshold: 0.72,  // 72% revealed = win
   checkInterval: null,
+  checkIntervals: new Set(),
   lastSoundTime: 0,
   destroyed: false,
+  hasWon: false,
+  victoryTimeout: null,
+  victoryModalTimeout: null,
+  loadVersion: 0,
+  modalActionLocked: false,
 
   init() {
     this.destroyed = false;
     this.canvas = document.getElementById('coloring-canvas');
     if (!this.canvas) return;
+    Audio$.enabled = loadGlobalSoundEnabled(true);
     this.ctx = this.canvas.getContext('2d', { willReadFrequently: true });
     this.bgImg = document.getElementById('coloring-bg-img');
     this.bindUI();
@@ -80,9 +109,32 @@ const Game = {
 
   destroy() {
     this.destroyed = true;
-    clearInterval(this.checkInterval);
-    this.checkInterval = null;
+    this.clearAllCheckIntervals();
+    clearTimeout(this.victoryTimeout);
+    clearTimeout(this.victoryModalTimeout);
+    this.victoryTimeout = null;
+    this.victoryModalTimeout = null;
     this.isDrawing = false;
+    this.hasWon = false;
+    Audio$.stopAll();
+  },
+
+  clearAllCheckIntervals() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+    this.checkIntervals.forEach((id) => clearInterval(id));
+    this.checkIntervals.clear();
+  },
+
+  setVictoryButtonsDisabled(disabled) {
+    const nextBtn = document.getElementById('btn-next-animal');
+    const againBtn = document.getElementById('btn-play-again');
+    [nextBtn, againBtn].forEach((btn) => {
+      if (!btn) return;
+      btn.disabled = disabled;
+    });
   },
 
   bindUI() {
@@ -110,10 +162,16 @@ const Game = {
     });
 
     // Sound toggle
-    document.getElementById('btn-sound-toggle').addEventListener('click', e => {
-      Audio$.enabled = !Audio$.enabled;
-      e.currentTarget.textContent = Audio$.enabled ? '🔊' : '🔇';
-    });
+    const soundBtn = document.getElementById('btn-sound-toggle');
+    if (soundBtn) {
+      soundBtn.textContent = Audio$.enabled ? '🔊' : '🔇';
+      soundBtn.onclick = (e) => {
+        Audio$.enabled = !Audio$.enabled;
+        if (!Audio$.enabled) Audio$.stopAll();
+        saveGlobalSoundEnabled(Audio$.enabled);
+        e.currentTarget.textContent = Audio$.enabled ? '🔊' : '🔇';
+      };
+    }
 
     // New animal button
     document.getElementById('btn-new-animal').addEventListener('click', () => {
@@ -139,10 +197,16 @@ const Game = {
 
     // Victory buttons
     document.getElementById('btn-play-again').addEventListener('click', () => {
+      if (this.modalActionLocked) return;
+      this.modalActionLocked = true;
+      this.setVictoryButtonsDisabled(true);
       document.getElementById('victory-modal').classList.remove('active');
       this.loadAnimal(this.currentAnimal);
     });
     document.getElementById('btn-next-animal').addEventListener('click', () => {
+      if (this.modalActionLocked) return;
+      this.modalActionLocked = true;
+      this.setVictoryButtonsDisabled(true);
       document.getElementById('victory-modal').classList.remove('active');
       this.currentAnimalIdx = (this.currentAnimalIdx + 1) % ANIMALS.length;
       const next = ANIMALS[this.currentAnimalIdx];
@@ -155,23 +219,32 @@ const Game = {
   },
 
   loadAnimal(animalId) {
+    const currentLoadVersion = ++this.loadVersion;
     const loader = document.getElementById('loading-overlay');
     if (!loader) return;
     loader.classList.add('active');
     const hintOverlay = document.getElementById('hint-overlay');
     if (hintOverlay) hintOverlay.classList.remove('hidden');
     this.hasStarted = false;
-    clearInterval(this.checkInterval);
+    this.hasWon = false;
+    this.clearAllCheckIntervals();
+    clearTimeout(this.victoryTimeout);
+    clearTimeout(this.victoryModalTimeout);
+    this.victoryTimeout = null;
+    this.victoryModalTimeout = null;
+    Audio$.stopAll();
     this.updateProgress(0);
 
     const animal = ANIMALS.find(a => a.id === animalId);
     this.imageObj = new Image();
     this.imageObj.crossOrigin = 'anonymous';
     this.imageObj.onload = () => {
+      if (this.destroyed || currentLoadVersion !== this.loadVersion) return;
       loader.classList.remove('active');
       this.setupCanvas();
     };
     this.imageObj.onerror = () => {
+      if (this.destroyed || currentLoadVersion !== this.loadVersion) return;
       loader.classList.remove('active');
     };
     this.imageObj.src = animal.src;
@@ -180,9 +253,15 @@ const Game = {
   setupCanvas() {
     const wrapper = document.getElementById('canvas-wrapper');
     if (!wrapper || !this.canvas || !this.ctx || !this.imageObj) return;
-    const W = wrapper.clientWidth || 640;
-    const ratio = this.imageObj.naturalHeight / this.imageObj.naturalWidth;
-    const H = Math.round(W * ratio);
+    const wrapperWidth = wrapper.clientWidth;
+    const W = Number.isFinite(wrapperWidth) && wrapperWidth > 0 ? Math.round(wrapperWidth) : 640;
+    const naturalWidth = this.imageObj.naturalWidth;
+    const naturalHeight = this.imageObj.naturalHeight;
+    const ratio = Number.isFinite(naturalWidth) && Number.isFinite(naturalHeight) && naturalWidth > 0
+      ? naturalHeight / naturalWidth
+      : 1;
+    const rawH = Math.round(W * ratio);
+    const H = Number.isFinite(rawH) && rawH > 0 ? rawH : Math.round(W * 0.75);
 
     this.canvas.width  = W;
     this.canvas.height = H;
@@ -194,7 +273,9 @@ const Game = {
     // 2) Draw ONLY the fog overlay on the canvas (image NOT drawn here)
     //    destination-out will erase fog pixels, revealing bgImg beneath
     this.ctx.clearRect(0, 0, W, H);
-    const grad = this.ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, Math.max(W,H)*0.7);
+    const radius = Math.max(W, H) * 0.7;
+    const safeRadius = Number.isFinite(radius) && radius > 0 ? radius : Math.max(W, H, 1);
+    const grad = this.ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, safeRadius);
     grad.addColorStop(0, 'rgba(200,210,230,0.97)');
     grad.addColorStop(1, 'rgba(180,190,215,0.99)');
     this.ctx.fillStyle = grad;
@@ -220,7 +301,9 @@ const Game = {
 
     this.totalPixels = W * H;
     this.revealed = 0;
+    this.clearAllCheckIntervals();
     this.checkInterval = setInterval(() => this.checkReveal(), 1000);
+    this.checkIntervals.add(this.checkInterval);
   },
 
   getCanvasPos(e) {
@@ -246,7 +329,7 @@ const Game = {
   },
 
   draw(e) {
-    if (!this.isDrawing) return;
+    if (!this.isDrawing || this.hasWon) return;
     const pos = this.getCanvasPos(e);
     this.eraseBrush(pos.x, pos.y);
 
@@ -300,12 +383,16 @@ const Game = {
   },
 
   checkReveal() {
-    if (this.destroyed) return;
+    if (this.destroyed || this.hasWon) return;
     const pct = this.getRevealPct();
     this.updateProgress(pct);
     if (pct >= this.victoryThreshold) {
-      clearInterval(this.checkInterval);
-      setTimeout(() => this.showVictory(), 400);
+      this.hasWon = true;
+      this.clearAllCheckIntervals();
+      this.victoryTimeout = setTimeout(() => {
+        this.victoryTimeout = null;
+        this.showVictory();
+      }, 400);
     }
   },
 
@@ -319,6 +406,9 @@ const Game = {
   },
 
   showVictory() {
+    if (this.destroyed) return;
+    this.modalActionLocked = false;
+    this.setVictoryButtonsDisabled(false);
     // Clear the fog canvas entirely — bgImg already shows the full image
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
 
@@ -330,7 +420,8 @@ const Game = {
     const animal = ANIMALS.find(a => a.id === this.currentAnimal);
     preview.innerHTML = `<img src="${animal.src}" alt="${animal.label}">`;
 
-    setTimeout(() => {
+    this.victoryModalTimeout = setTimeout(() => {
+      this.victoryModalTimeout = null;
       document.getElementById('victory-modal').classList.add('active');
     }, 600);
   },
