@@ -27,6 +27,7 @@ export default function JigsawGame() {
   const customImageObjectUrlRef = useRef<string | null>(null);
   const cropDragRef = useRef({
     active: false,
+    pointerId: -1,
     mode: "draw" as "draw" | "move",
     startXPx: 0,
     startYPx: 0,
@@ -100,6 +101,7 @@ export default function JigsawGame() {
       canvas.addEventListener("touchend", onTouchEnd, { passive: false });
 
       return () => {
+        document.body.style.overflow = "";
         if (customImageObjectUrlRef.current) {
           URL.revokeObjectURL(customImageObjectUrlRef.current);
           customImageObjectUrlRef.current = null;
@@ -176,11 +178,16 @@ export default function JigsawGame() {
     return null;
   };
 
-  const beginCropSelection = (e: React.PointerEvent<HTMLDivElement>) => {
+  const beginCropSelectionAtPoint = (
+    clientX: number,
+    clientY: number,
+    container: HTMLDivElement,
+    dragId: number
+  ) => {
     if (!customImagePreview) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const startXPx = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
-    const startYPx = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+    const rect = container.getBoundingClientRect();
+    const startXPx = Math.max(0, Math.min(rect.width, clientX - rect.left));
+    const startYPx = Math.max(0, Math.min(rect.height, clientY - rect.top));
 
     const pointerXNorm = startXPx / rect.width;
     const pointerYNorm = startYPx / rect.height;
@@ -193,6 +200,7 @@ export default function JigsawGame() {
     if (clickedInsideExistingRect && customCropRect) {
       cropDragRef.current = {
         active: true,
+        pointerId: dragId,
         mode: "move",
         startXPx,
         startYPx,
@@ -202,12 +210,13 @@ export default function JigsawGame() {
         width: rect.width,
         height: rect.height,
       };
-      e.currentTarget.setPointerCapture(e.pointerId);
+      document.body.style.overflow = "hidden";
       return;
     }
 
     cropDragRef.current = {
       active: true,
+      pointerId: dragId,
       mode: "draw",
       startXPx,
       startYPx,
@@ -224,14 +233,20 @@ export default function JigsawGame() {
       width: 0.001,
       height: 0.001,
     });
-    e.currentTarget.setPointerCapture(e.pointerId);
+    document.body.style.overflow = "hidden";
   };
 
-  const updateCropSelection = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!cropDragRef.current.active) return;
+  const updateCropSelectionAtPoint = (
+    clientX: number,
+    clientY: number,
+    container: HTMLDivElement,
+    dragId: number
+  ) => {
+    if (!cropDragRef.current.active || cropDragRef.current.pointerId !== dragId) return;
     const { startXPx, startYPx, width, height, mode, pointerOffsetXPx, pointerOffsetYPx, initialRect } = cropDragRef.current;
-    const currentXPx = Math.max(0, Math.min(width, e.clientX - e.currentTarget.getBoundingClientRect().left));
-    const currentYPx = Math.max(0, Math.min(height, e.clientY - e.currentTarget.getBoundingClientRect().top));
+    const bounds = container.getBoundingClientRect();
+    const currentXPx = Math.max(0, Math.min(width, clientX - bounds.left));
+    const currentYPx = Math.max(0, Math.min(height, clientY - bounds.top));
 
     if (mode === "move" && initialRect) {
       const rectWidthPx = initialRect.width * width;
@@ -294,9 +309,54 @@ export default function JigsawGame() {
     });
   };
 
-  const endCropSelection = (e: React.PointerEvent<HTMLDivElement>) => {
+  const beginCropSelection = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch") return;
+    e.preventDefault();
+    beginCropSelectionAtPoint(e.clientX, e.clientY, e.currentTarget, e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const updateCropSelection = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch") return;
+    e.preventDefault();
+    updateCropSelectionAtPoint(e.clientX, e.clientY, e.currentTarget, e.pointerId);
+  };
+
+  const handleCropTouchStart = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!customImagePreview) return;
+    const touch = e.changedTouches[0];
+    if (!touch) return;
+    e.preventDefault();
+    beginCropSelectionAtPoint(touch.clientX, touch.clientY, e.currentTarget, touch.identifier);
+  };
+
+  const handleCropTouchMove = (e: React.TouchEvent<HTMLDivElement>) => {
     if (!cropDragRef.current.active) return;
+    const dragId = cropDragRef.current.pointerId;
+    const touch = Array.from(e.touches).find((t) => t.identifier === dragId);
+    if (!touch) return;
+    e.preventDefault();
+    updateCropSelectionAtPoint(touch.clientX, touch.clientY, e.currentTarget, dragId);
+  };
+
+  const handleCropTouchEnd = (e: React.TouchEvent<HTMLDivElement>) => {
+    if (!cropDragRef.current.active) return;
+    const dragId = cropDragRef.current.pointerId;
+    const touchEnded = Array.from(e.changedTouches).some((t) => t.identifier === dragId);
+    if (!touchEnded) return;
+    e.preventDefault();
     cropDragRef.current.active = false;
+    cropDragRef.current.pointerId = -1;
+    document.body.style.overflow = "";
+  };
+
+  const endCropSelection = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === "touch") return;
+    if (!cropDragRef.current.active || cropDragRef.current.pointerId !== e.pointerId) return;
+    e.preventDefault();
+    cropDragRef.current.active = false;
+    cropDragRef.current.pointerId = -1;
+    document.body.style.overflow = "";
     if (e.currentTarget.hasPointerCapture(e.pointerId)) {
       e.currentTarget.releasePointerCapture(e.pointerId);
     }
@@ -474,7 +534,11 @@ export default function JigsawGame() {
                       onPointerDown={beginCropSelection}
                       onPointerMove={updateCropSelection}
                       onPointerUp={endCropSelection}
-                      onPointerLeave={endCropSelection}
+                      onPointerCancel={endCropSelection}
+                      onTouchStart={handleCropTouchStart}
+                      onTouchMove={handleCropTouchMove}
+                      onTouchEnd={handleCropTouchEnd}
+                      onTouchCancel={handleCropTouchEnd}
                     >
                       <img src={customImagePreview} alt="ตัวอย่างรูปที่อัปโหลด" className="custom-preview-img" draggable={false} />
                       {customCropRect && (
