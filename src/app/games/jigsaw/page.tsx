@@ -19,8 +19,25 @@ const ANIMAL_OPTIONS = [
   { id: "monkey", label: "ลิงซน" },
 ];
 
+type AspectRatioLock = "free" | "1:1" | "4:3" | "16:9";
+type CropRect = { x: number; y: number; width: number; height: number };
+
 export default function JigsawGame() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
+  const customImageObjectUrlRef = useRef<string | null>(null);
+  const cropDragRef = useRef({
+    active: false,
+    mode: "draw" as "draw" | "move",
+    startXPx: 0,
+    startYPx: 0,
+    pointerOffsetXPx: 0,
+    pointerOffsetYPx: 0,
+    initialRect: null as CropRect | null,
+    width: 1,
+    height: 1,
+  });
+  const [customImagePreview, setCustomImagePreview] = useState<string | null>(null);
+  const [customCropRect, setCustomCropRect] = useState<CropRect | null>(null);
   
   // Game States
   const [isLoading, setIsLoading] = useState(true);
@@ -41,6 +58,9 @@ export default function JigsawGame() {
     hint: false,
     border: false,
     sound: true,
+    imageMode: "preset" as "preset" | "upload",
+    aspectRatio: "free" as AspectRatioLock,
+    region: "full" as "full" | "top" | "bottom" | "left" | "right" | "center",
   });
 
   useEffect(() => {
@@ -80,6 +100,11 @@ export default function JigsawGame() {
       canvas.addEventListener("touchend", onTouchEnd, { passive: false });
 
       return () => {
+        if (customImageObjectUrlRef.current) {
+          URL.revokeObjectURL(customImageObjectUrlRef.current);
+          customImageObjectUrlRef.current = null;
+        }
+
         canvas.removeEventListener("mousedown", onDragStart);
         canvas.removeEventListener("mousemove", onDragMove);
         canvas.removeEventListener("mouseup", onDragEnd);
@@ -105,17 +130,175 @@ export default function JigsawGame() {
       setShowGate(false);
       
       // Load current settings into draft
+      const hasCustomImage = !!Game.customImageSrc;
       setDraftSettings({
         animal: Game.currentAnimal,
         grid: Game.gridSize,
         hint: Game.showHint,
         border: Game.showBordersOnly,
         sound: AudioSynth.enabled,
+        imageMode: hasCustomImage ? "upload" : "preset",
+        aspectRatio: (Game.cropAspectRatio || "free") as AspectRatioLock,
+        region: Game.imageRegion || "full",
       });
+      setCustomImagePreview(hasCustomImage ? Game.customImageSrc : null);
+      setCustomCropRect(Game.customCropRect || null);
       setShowSettings(true);
     } else {
       setGateError(true);
       setGateInput("");
+    }
+  };
+
+  const handleCustomImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) return;
+
+    if (customImageObjectUrlRef.current) {
+      URL.revokeObjectURL(customImageObjectUrlRef.current);
+    }
+
+    const objectUrl = URL.createObjectURL(file);
+    customImageObjectUrlRef.current = objectUrl;
+    setCustomImagePreview(objectUrl);
+    setCustomCropRect(null);
+    setDraftSettings((prev) => ({ ...prev, imageMode: "upload" }));
+
+    // Reset input value so selecting the same file again still triggers onChange.
+    e.target.value = "";
+  };
+
+  const getAspectRatioValue = (ratio: AspectRatioLock) => {
+    if (ratio === "1:1") return 1;
+    if (ratio === "4:3") return 4 / 3;
+    if (ratio === "16:9") return 16 / 9;
+    return null;
+  };
+
+  const beginCropSelection = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!customImagePreview) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const startXPx = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+    const startYPx = Math.max(0, Math.min(rect.height, e.clientY - rect.top));
+
+    const pointerXNorm = startXPx / rect.width;
+    const pointerYNorm = startYPx / rect.height;
+    const clickedInsideExistingRect = !!customCropRect &&
+      pointerXNorm >= customCropRect.x &&
+      pointerXNorm <= customCropRect.x + customCropRect.width &&
+      pointerYNorm >= customCropRect.y &&
+      pointerYNorm <= customCropRect.y + customCropRect.height;
+
+    if (clickedInsideExistingRect && customCropRect) {
+      cropDragRef.current = {
+        active: true,
+        mode: "move",
+        startXPx,
+        startYPx,
+        pointerOffsetXPx: startXPx - customCropRect.x * rect.width,
+        pointerOffsetYPx: startYPx - customCropRect.y * rect.height,
+        initialRect: customCropRect,
+        width: rect.width,
+        height: rect.height,
+      };
+      e.currentTarget.setPointerCapture(e.pointerId);
+      return;
+    }
+
+    cropDragRef.current = {
+      active: true,
+      mode: "draw",
+      startXPx,
+      startYPx,
+      pointerOffsetXPx: 0,
+      pointerOffsetYPx: 0,
+      initialRect: null,
+      width: rect.width,
+      height: rect.height,
+    };
+
+    setCustomCropRect({
+      x: startXPx / rect.width,
+      y: startYPx / rect.height,
+      width: 0.001,
+      height: 0.001,
+    });
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const updateCropSelection = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!cropDragRef.current.active) return;
+    const { startXPx, startYPx, width, height, mode, pointerOffsetXPx, pointerOffsetYPx, initialRect } = cropDragRef.current;
+    const currentXPx = Math.max(0, Math.min(width, e.clientX - e.currentTarget.getBoundingClientRect().left));
+    const currentYPx = Math.max(0, Math.min(height, e.clientY - e.currentTarget.getBoundingClientRect().top));
+
+    if (mode === "move" && initialRect) {
+      const rectWidthPx = initialRect.width * width;
+      const rectHeightPx = initialRect.height * height;
+
+      let nextLeftPx = currentXPx - pointerOffsetXPx;
+      let nextTopPx = currentYPx - pointerOffsetYPx;
+
+      nextLeftPx = Math.max(0, Math.min(width - rectWidthPx, nextLeftPx));
+      nextTopPx = Math.max(0, Math.min(height - rectHeightPx, nextTopPx));
+
+      setCustomCropRect({
+        x: nextLeftPx / width,
+        y: nextTopPx / height,
+        width: initialRect.width,
+        height: initialRect.height,
+      });
+      return;
+    }
+
+    const ratio = getAspectRatioValue(draftSettings.aspectRatio);
+    let endXPx = currentXPx;
+    let endYPx = currentYPx;
+
+    if (ratio) {
+      const signX = endXPx >= startXPx ? 1 : -1;
+      const signY = endYPx >= startYPx ? 1 : -1;
+      const maxWidthByBounds = signX > 0 ? width - startXPx : startXPx;
+      const maxHeightByBounds = signY > 0 ? height - startYPx : startYPx;
+
+      const requestedWidth = Math.abs(endXPx - startXPx);
+      const requestedHeight = Math.abs(endYPx - startYPx);
+
+      let targetWidth = requestedWidth;
+      let targetHeight = requestedHeight;
+
+      if (requestedWidth / ratio >= requestedHeight) {
+        targetHeight = requestedWidth / ratio;
+      } else {
+        targetWidth = requestedHeight * ratio;
+      }
+
+      targetWidth = Math.min(targetWidth, maxWidthByBounds, maxHeightByBounds * ratio);
+      targetHeight = targetWidth / ratio;
+
+      endXPx = startXPx + signX * targetWidth;
+      endYPx = startYPx + signY * targetHeight;
+    }
+
+    const left = Math.min(startXPx, endXPx);
+    const top = Math.min(startYPx, endYPx);
+    const rectWidth = Math.max(6, Math.abs(endXPx - startXPx));
+    const rectHeight = Math.max(6, Math.abs(endYPx - startYPx));
+
+    setCustomCropRect({
+      x: left / width,
+      y: top / height,
+      width: Math.min(1 - left / width, rectWidth / width),
+      height: Math.min(1 - top / height, rectHeight / height),
+    });
+  };
+
+  const endCropSelection = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!cropDragRef.current.active) return;
+    cropDragRef.current.active = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
     }
   };
 
@@ -125,6 +308,21 @@ export default function JigsawGame() {
     Game.showHint = draftSettings.hint;
     Game.showBordersOnly = draftSettings.border;
     AudioSynth.enabled = draftSettings.sound;
+    Game.imageRegion = draftSettings.region;
+    Game.cropAspectRatio = draftSettings.aspectRatio;
+    Game.customCropRect = customCropRect;
+
+    if (draftSettings.imageMode === "upload" && customImagePreview) {
+      Game.customImageSrc = customImagePreview;
+      Game.useCustomImageNextRoundOnly = true;
+    } else {
+      Game.customImageSrc = null;
+      Game.useCustomImageNextRoundOnly = false;
+      Game.customCropRect = null;
+      Game.cropAspectRatio = "free";
+      setCustomImagePreview(null);
+    }
+
     setShowHint(draftSettings.hint);
     
     setShowSettings(false);
@@ -219,23 +417,115 @@ export default function JigsawGame() {
         <h2>⚙️ การตั้งค่าสำหรับผู้ปกครอง</h2>
         <div className="settings-layout">
           <div className="settings-section">
-            <h3>เลือกรูปภาพสัตว์ (8 ชนิด)</h3>
-            <div className="animal-grid-scroll">
-              <div className="animal-grid">
-                {animals.map((a) => (
-                  <button
-                    key={a.id}
-                    className={`animal-card ${draftSettings.animal === a.id ? "active" : ""}`}
-                    onClick={() => { AudioSynth.playPick(); setDraftSettings({ ...draftSettings, animal: a.id }); }}
-                  >
-                    <div className="animal-img-wrapper">
-                      <Image src={`/assets/cute_${a.id}.png`} alt={a.label} width={60} height={60} />
-                    </div>
-                    <span>{a.label}</span>
-                  </button>
-                ))}
-              </div>
+            <h3>แหล่งรูปภาพ</h3>
+            <div className="image-mode-switch">
+              <button
+                className={`mode-btn ${draftSettings.imageMode === "preset" ? "active" : ""}`}
+                onClick={() => {
+                  AudioSynth.playPick();
+                  setDraftSettings({ ...draftSettings, imageMode: "preset" });
+                  setCustomCropRect(null);
+                }}
+              >
+                ใช้รูปสัตว์ในเกม
+              </button>
+              <button
+                className={`mode-btn ${draftSettings.imageMode === "upload" ? "active" : ""}`}
+                onClick={() => { AudioSynth.playPick(); setDraftSettings({ ...draftSettings, imageMode: "upload" }); }}
+              >
+                อัปโหลดรูปเอง
+              </button>
             </div>
+
+            {draftSettings.imageMode === "upload" && (
+              <div className="upload-panel">
+                <label className="upload-btn" htmlFor="jigsaw-custom-image-input">
+                  เลือกรูปจากเครื่อง
+                </label>
+                <input
+                  id="jigsaw-custom-image-input"
+                  type="file"
+                  accept="image/*"
+                  onChange={handleCustomImageUpload}
+                />
+                <div className="ratio-selector-settings">
+                  {([
+                    { id: "free", label: "อิสระ" },
+                    { id: "1:1", label: "1:1" },
+                    { id: "4:3", label: "4:3" },
+                    { id: "16:9", label: "16:9" },
+                  ] as { id: AspectRatioLock; label: string }[]).map((ratio) => (
+                    <button
+                      key={ratio.id}
+                      className={`ratio-btn-settings ${draftSettings.aspectRatio === ratio.id ? "active" : ""}`}
+                      onClick={() => {
+                        AudioSynth.playPick();
+                        setDraftSettings({ ...draftSettings, aspectRatio: ratio.id });
+                      }}
+                    >
+                      {ratio.label}
+                    </button>
+                  ))}
+                </div>
+                {customImagePreview ? (
+                  <div className="custom-preview-wrap">
+                    <div
+                      className="crop-preview-area"
+                      onPointerDown={beginCropSelection}
+                      onPointerMove={updateCropSelection}
+                      onPointerUp={endCropSelection}
+                      onPointerLeave={endCropSelection}
+                    >
+                      <img src={customImagePreview} alt="ตัวอย่างรูปที่อัปโหลด" className="custom-preview-img" draggable={false} />
+                      {customCropRect && (
+                        <div
+                          className="crop-selection-box"
+                          style={{
+                            left: `${customCropRect.x * 100}%`,
+                            top: `${customCropRect.y * 100}%`,
+                            width: `${customCropRect.width * 100}%`,
+                            height: `${customCropRect.height * 100}%`,
+                          }}
+                        />
+                      )}
+                    </div>
+                    <div className="crop-tools-row">
+                      <span className="upload-note">ลากบนภาพเพื่อกำหนดกรอบ crop แบบละเอียด</span>
+                      <button
+                        className="clear-crop-btn"
+                        onClick={() => setCustomCropRect(null)}
+                      >
+                        ล้างกรอบ
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <p className="upload-note">ยังไม่ได้เลือกไฟล์ รูปนี้จะถูกใช้เฉพาะรอบถัดไปที่เริ่มเกม</p>
+                )}
+              </div>
+            )}
+
+            {draftSettings.imageMode === "preset" && (
+              <>
+                <h3 style={{ marginTop: "16px" }}>เลือกรูปภาพสัตว์ (8 ชนิด)</h3>
+                <div className="animal-grid-scroll">
+                  <div className="animal-grid">
+                    {animals.map((a) => (
+                      <button
+                        key={a.id}
+                        className={`animal-card ${draftSettings.animal === a.id ? "active" : ""}`}
+                        onClick={() => { AudioSynth.playPick(); setDraftSettings({ ...draftSettings, animal: a.id }); }}
+                      >
+                        <div className="animal-img-wrapper">
+                          <Image src={`/assets/cute_${a.id}.png`} alt={a.label} width={60} height={60} />
+                        </div>
+                        <span>{a.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
           <div className="settings-section">
             <h3>ระดับความยาก</h3>
@@ -253,6 +543,28 @@ export default function JigsawGame() {
                 >
                   <span className="diff-level">{lvl.t}</span>
                   <span className="diff-pieces">{lvl.p}</span>
+                </button>
+              ))}
+            </div>
+            <h3 style={{ marginTop: "20px" }}>เลือกส่วนของรูปที่จะเล่น</h3>
+            <div className="region-selector-settings">
+              {[
+                { id: "full", label: "ทั้งภาพ" },
+                { id: "top", label: "ครึ่งบน" },
+                { id: "bottom", label: "ครึ่งล่าง" },
+                { id: "left", label: "ครึ่งซ้าย" },
+                { id: "right", label: "ครึ่งขวา" },
+                { id: "center", label: "ตรงกลาง" },
+              ].map((region) => (
+                <button
+                  key={region.id}
+                  className={`region-btn-settings ${draftSettings.region === region.id ? "active" : ""}`}
+                  onClick={() => {
+                    AudioSynth.playPick();
+                    setDraftSettings({ ...draftSettings, region: region.id as typeof draftSettings.region });
+                  }}
+                >
+                  {region.label}
                 </button>
               ))}
             </div>

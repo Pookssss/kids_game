@@ -212,6 +212,11 @@ export const Game = {
   movesCount: 0,
   isWon: false,
   imageObj: null,
+  customImageSrc: null,
+  useCustomImageNextRoundOnly: false,
+  imageRegion: 'full',
+  cropAspectRatio: 'free',
+  customCropRect: null,
 
   // Options (Active)
   showHint: false, // Default to false (closed by default)
@@ -578,8 +583,18 @@ export const Game = {
     // Sync hint button active states
     if(this.callbacks.onHintChange) this.callbacks.onHintChange(this.showHint);
 
-    // Set source image
-    this.imageObj.src = `../../assets/cute_${this.currentAnimal}.png`;
+    // Set source image (custom image can be used for one round only)
+    const usingCustomImage = !!this.customImageSrc;
+    const sourceImage = usingCustomImage
+      ? this.customImageSrc
+      : `../../assets/cute_${this.currentAnimal}.png`;
+
+    this.imageObj.src = sourceImage;
+
+    if (usingCustomImage && this.useCustomImageNextRoundOnly) {
+      this.customImageSrc = null;
+      this.useCustomImageNextRoundOnly = false;
+    }
     
     this.imageObj.onload = () => {
       if(this.callbacks.setLoading) this.callbacks.setLoading(false);
@@ -592,6 +607,86 @@ export const Game = {
         this.elapsedSeconds++;
       }, 1000);
     };
+
+    this.imageObj.onerror = () => {
+      if (sourceImage !== `../../assets/cute_${this.currentAnimal}.png`) {
+        this.imageObj.src = `../../assets/cute_${this.currentAnimal}.png`;
+        return;
+      }
+      if(this.callbacks.setLoading) this.callbacks.setLoading(false);
+    };
+  },
+
+  getSourceCropRect() {
+    const imageWidth = this.imageObj.naturalWidth || this.imageObj.width;
+    const imageHeight = this.imageObj.naturalHeight || this.imageObj.height;
+
+    if (!imageWidth || !imageHeight) {
+      return { sx: 0, sy: 0, sw: 1, sh: 1 };
+    }
+
+    if (this.customCropRect) {
+      const x = Math.max(0, Math.min(1, this.customCropRect.x));
+      const y = Math.max(0, Math.min(1, this.customCropRect.y));
+      const width = Math.max(0.05, Math.min(1 - x, this.customCropRect.width));
+      const height = Math.max(0.05, Math.min(1 - y, this.customCropRect.height));
+      return {
+        sx: x * imageWidth,
+        sy: y * imageHeight,
+        sw: width * imageWidth,
+        sh: height * imageHeight,
+      };
+    }
+
+    if (this.cropAspectRatio && this.cropAspectRatio !== 'free') {
+      const targetRatio = this.cropAspectRatio === '1:1'
+        ? 1
+        : this.cropAspectRatio === '4:3'
+          ? (4 / 3)
+          : (16 / 9);
+
+      const imageRatio = imageWidth / imageHeight;
+      if (imageRatio > targetRatio) {
+        const sw = imageHeight * targetRatio;
+        return {
+          sx: (imageWidth - sw) / 2,
+          sy: 0,
+          sw,
+          sh: imageHeight,
+        };
+      }
+
+      const sh = imageWidth / targetRatio;
+      return {
+        sx: 0,
+        sy: (imageHeight - sh) / 2,
+        sw: imageWidth,
+        sh,
+      };
+    }
+
+    if (this.imageRegion === 'top') {
+      return { sx: 0, sy: 0, sw: imageWidth, sh: imageHeight * 0.55 };
+    }
+    if (this.imageRegion === 'bottom') {
+      return { sx: 0, sy: imageHeight * 0.45, sw: imageWidth, sh: imageHeight * 0.55 };
+    }
+    if (this.imageRegion === 'left') {
+      return { sx: 0, sy: 0, sw: imageWidth * 0.55, sh: imageHeight };
+    }
+    if (this.imageRegion === 'right') {
+      return { sx: imageWidth * 0.45, sy: 0, sw: imageWidth * 0.55, sh: imageHeight };
+    }
+    if (this.imageRegion === 'center') {
+      return {
+        sx: imageWidth * 0.2,
+        sy: imageHeight * 0.2,
+        sw: imageWidth * 0.6,
+        sh: imageHeight * 0.6,
+      };
+    }
+
+    return { sx: 0, sy: 0, sw: imageWidth, sh: imageHeight };
   },
 
   // Compute interlocking tab arrangements
@@ -811,8 +906,19 @@ export const Game = {
     
     // Draw guide photo if Hint option is active
     if (this.showHint) {
+      const crop = this.getSourceCropRect();
       this.ctx.globalAlpha = 0.22;
-      this.ctx.drawImage(this.imageObj, this.boardX, this.boardY, this.boardWidth, this.boardHeight);
+      this.ctx.drawImage(
+        this.imageObj,
+        crop.sx,
+        crop.sy,
+        crop.sw,
+        crop.sh,
+        this.boardX,
+        this.boardY,
+        this.boardWidth,
+        this.boardHeight
+      );
       this.ctx.globalAlpha = 1.0;
     }
     
@@ -921,7 +1027,18 @@ export const Game = {
     // Draw the image positioned relative to this piece coordinates
     const imgX = p.x - (p.correctX - this.boardX);
     const imgY = p.y - (p.correctY - this.boardY);
-    this.ctx.drawImage(this.imageObj, imgX, imgY, this.boardWidth, this.boardHeight);
+    const crop = this.getSourceCropRect();
+    this.ctx.drawImage(
+      this.imageObj,
+      crop.sx,
+      crop.sy,
+      crop.sw,
+      crop.sh,
+      imgX,
+      imgY,
+      this.boardWidth,
+      this.boardHeight
+    );
     this.ctx.restore();
 
     // Step C: Stroke outer borders
